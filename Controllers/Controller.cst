@@ -1,0 +1,292 @@
+﻿<%-- 
+Name	: Controller.cst
+Author	: XiongXueHao
+Description: Mvc Controller
+--%>
+<%@ CodeTemplate Language="C#" TargetLanguage="C#" ResponseEncoding="UTF-8" Inherits="CodeSmith.BaseTemplates.OutputFileCodeTemplate"  Debug="False" Description="Creates a simplistic entity object." %>
+<%@ Assembly Name="CodeSmith.BaseTemplates" %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the stored procedures should be based on." %>
+<%@ Property Name="SaveFilePath" Type="System.String" Category="Context" Description="SaveFilePath" %>
+<%@ Property Name="NameSpace" Type="System.String" Category="Context" Description="NameSpace" %>
+<%@ Property Name="Entities" Type="System.String" Category="Context" Description="Entities" %>
+<%@ Property Name="BaseDbName" Type="System.String" Category="Context" Description="BaseDbName" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<% this.OutputFile =SaveFilePath+ "\\" + UCase(SourceTable.Name) + "Controller.cs"; %>
+<script runat="template">
+public string LCase(string text)
+{
+    return text.Substring(0,1).ToLower() + text.Substring(1);
+}
+public string UCase(string text)
+{
+    return text.Substring(0,1).ToUpper() + text.Substring(1);
+}
+public string SText(string text)
+{
+    string reText=string.Empty;
+    string lastChar=text.Substring(text.Length-1);
+    if(lastChar=="s" || lastChar=="x" || lastChar=="o")
+    {
+        reText=text+"es";
+    }
+    else if(lastChar=="y")
+    {
+        reText=text.Remove(text.Length - 1,1)+"ies";
+    }
+    else
+    {
+        reText=text+"s";
+    }
+    return reText;
+}
+public string GetCSharpVariableType(ColumnSchema column)
+        {
+            switch(column.DataType)
+            {
+                case DbType.AnsiString: return "string";
+                case DbType.AnsiStringFixedLength: return "string";
+                case DbType.Binary: return "byte[]";
+                case DbType.Boolean: return "bool";
+                case DbType.Byte: return "int";
+                case DbType.Currency: return "decimal";
+                case DbType.Date: return "DataTime";
+                case DbType.DateTime: return "DateTime";
+                case DbType.Decimal: return "decimal";
+                case DbType.Double: return "double";
+                case DbType.Guid: return "Guid";
+                case DbType.Int16: return "short";
+                case DbType.Int32: return "int";
+                case DbType.Int64: return "long";
+                case DbType.Object: return "object";
+                case DbType.SByte: return "sbyte";
+                case DbType.Single: return "float";
+                case DbType.String: return "string";
+                case DbType.StringFixedLength: return "string";
+                case DbType.Time: return "TimeSpan";
+                case DbType.UInt16: return "ushort";
+                case DbType.UInt32: return "uint";
+                case DbType.UInt64: return "ulong";
+                case DbType.VarNumeric: return "decimal";
+            }
+
+            return "string";
+        }
+</script>
+<%string nameSpace=NameSpace;%>
+<%string className=UCase(SourceTable.Name)+"Controller";%>
+<%int idPrime=0;%>
+<%string tableName=SourceTable.Name;%>
+<%string tableNameUpper=UCase(SourceTable.Name);%>
+<%string tableNames=SText(SourceTable.Name);%>
+<%string tablePk=SourceTable.Columns[idPrime].Name;%>
+<%string tablePkLower=LCase(SourceTable.Columns[idPrime].Name);%>
+<%string tablePkUpper=UCase(SourceTable.Columns[idPrime].Name);%>
+<%string tablePkType=GetCSharpVariableType(SourceTable.Columns[idPrime]);%>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+using <%=nameSpace%>.Model;
+using <%=nameSpace%>.Model.Enum;
+using <%=nameSpace%>.BLL;
+using <%=nameSpace%>.Common;
+using Lib;
+
+/*
+Name : <%=tableNameUpper%> Mvc Controller
+CreatAuthor : XiongXueHao
+CreatTime : <%=DateTime.Now.ToString()%>
+Description : just creat some base methods with codesmith, please add or edit your method.
+*/
+namespace <%=nameSpace%>.Mis.Controllers
+{
+    public class <%=className%> : BaseController
+    {
+		private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        #region <%=tableNameUpper%> Manage
+        
+        #region Page
+        
+        /// <summary>
+        /// <%=tableNameUpper%> List Page
+        /// </summary>
+        /// <returns></returns>
+        public ActionResult <%=tableNameUpper%>List()
+        {
+            return View();
+        }
+        
+        /// <summary>
+        /// Insert or Edit <%=tableNameUpper%> Page
+        /// </summary>
+        /// <returns></returns>
+        public ActionResult <%=tableNameUpper%>Form(<%=tablePkType%> id = <%if(tablePkType=="int"){%> 0 <%} else { %> null <%}%>)
+        {
+            <% if(tablePkType=="int") { %>
+            ViewBag.IsEdit = id == 0 ? false : true;
+            <%} else {%>
+            ViewBag.IsEdit = string.IsNullOrEmpty(id) ? false : true;
+            <%}%>
+            <%=tableName%> _<%=tableName%> = BLLRepository.<%=tableNameUpper%>BLL.GetModelBy<%=tablePkUpper%>(id);
+            return View(_<%=tableName%>);
+        }
+        
+        /// <summary>
+        /// Insert or Edit <%=tableNameUpper%> Page Post
+        /// </summary>
+        /// <returns></returns>
+		//[ValidateInput(false)] //允许文本编辑器，HTML标签等通过验证
+        [HttpPost]
+        public ActionResult <%=tableNameUpper%>Form(<%=tableName%> _<%=tableName%>, <%=tablePkType%> id = <%if(tablePkType=="int"){%> 0 <%} else { %> null <%}%>)
+        {
+              <% if(tablePkType=="int")
+            {
+              
+            %>
+            ViewBag.IsEdit = id == 0 ? false : true;
+            <%}%>
+            <% else {
+                
+            %>
+            ViewBag.IsEdit = !string.IsNullOrEmpty(id);
+            <%}%>
+          
+            int result = -100;
+            if (ModelState.IsValid)
+            {
+				try
+				{
+	                if (!ViewBag.IsEdit) //添加
+	                {
+	                    result = BLLRepository.<%=tableNameUpper%>BLL.Insert(_<%=tableName%>);
+	                }
+	                else //更新
+	                {
+	                    result = BLLRepository.<%=tableNameUpper%>BLL.Update(_<%=tableName%>, id);
+	                }
+				}
+				catch (Exception Ex)
+				{
+					string ExceptionMessage = Model.ExceptionExtend.ShowMessage(Ex);
+					log.Error(string.Format("id={0}，ExceptionMessage：" + ExceptionMessage, id), Ex);
+				}
+            }
+
+            if (result > -1)
+                return OperationTip("操作成功", Url.Content("~/<%=tableNameUpper%>/<%=tableNameUpper%>List"));
+            else if (string.IsNullOrWhiteSpace(ViewBag.Error))
+                ViewBag.Error = "表单验证失败";
+
+            return View(_<%=tableName%>);
+        }
+        
+        /// <summary>
+        /// <%=tableNameUpper%> Details Page
+        /// </summary>
+        /// <returns></returns>
+        public ActionResult <%=tableNameUpper%>Details(<%=tablePkType%> id)
+        {
+            <%=tableName%> _<%=tableName%> = BLLRepository.<%=tableNameUpper%>BLL.GetModelBy<%=tablePkUpper%>(id);
+            return View(_<%=tableName%>);
+        }
+
+        #endregion Page
+
+        #region AJax
+        
+        /// <summary>
+        /// get <%=tableNameUpper%> list json for ajax
+        /// </summary>
+        /// <returns></returns>
+        public JsonResult <%=tableNameUpper%>GetList()
+        {
+            <%=tableNameUpper%>Parameter _parameter = new <%=tableNameUpper%>Parameter()
+            {
+                PageIndex = RequestHelper.Query("page").ToInt(0),
+                PageSize = RequestHelper.Query("rows").ToInt(20),
+                OrderBy = RequestHelper.Query("sidx"),
+                IsAsc = RequestHelper.Query("sord").ToLower().Equals("asc"),
+                //其他查询条件，请根据需要自行添加
+            };
+            var _list = BLLRepository.<%=tableNameUpper%>BLL.GetList(_parameter).Select(c => new
+            {
+                id=c.<%=SourceTable.Columns[0].Name%>,
+                <% for(int i=1;i<SourceTable.Columns.Count;i++)
+                { 
+                    string value=SourceTable.Columns[i].Name;
+                    if(GetCSharpVariableType(SourceTable.Columns[i])=="DateTime")
+                    {
+                        if(SourceTable.Columns[i].AllowDBNull)
+                        {
+                            value= value+" != null ? ((DateTime)c."+value+").ToString(\"yyyy-MM-dd HH:mm\") : string.Empty";
+                        }
+                        else
+                        {
+                            value=value+".ToString(\"yyyy-MM-dd HH:mm\")";
+                        }
+                    }
+                %>
+                <%=SourceTable.Columns[i].Name%>=c.<%=value%>,
+                <%}%>
+            });
+            return Json(new { page = _parameter.PageIndex, total = _parameter.PageCount, records = _parameter.RecordCount, list = _list }
+                , JsonRequestBehavior.AllowGet);
+        }
+        
+        /// <summary>
+        /// Update <%=tableNameUpper%> Status for ajax
+        /// </summary>
+        /// <returns></returns>
+        public ActionResult <%=tableNameUpper%>UpdateStatus(string id, string key, string value)
+        {
+            string reStr = string.Empty;
+            
+            bool validateName = true; //是否验证字段名
+            bool validateValue = false; //是否验证字段值
+            string[] allowName = { "status", "del" }; //允许的字段名
+            string[] allowValue = { "1" }; //允许的字段值
+            
+            if (validateName && !allowName.Contains(key.ToLower()))
+            {
+                reStr = "keyError";
+            }
+            else if (validateValue && !allowValue.Contains(value.ToLower()))
+            {
+                reStr = "valueError";
+            }
+            else
+            {
+				try
+				{
+	                //your logic...
+					if (key.ToLower() == allowName[1])
+					{
+						BLLRepository.<%=tableNameUpper%>BLL.Delete(<%if(tablePkType=="int"){%> Convert.ToInt32(id) <%} else { %> Convert.ToString(id) <%}%>); //删除
+					}
+					else
+					{
+						string idsStr = "'" + id.Replace(",", "','") + "'";
+		                BLLRepository.<%=tableNameUpper%>BLL.UpdateColumnValue(idsStr, key, value);
+					}
+				}
+				catch (Exception Ex)
+				{
+					string ExceptionMessage = Model.ExceptionExtend.ShowMessage(Ex);
+					log.Error(string.Format("id={0}，ExceptionMessage：" + ExceptionMessage, id), Ex);
+				}
+				
+            }
+            
+            reStr = string.IsNullOrEmpty(reStr) ? "success" : reStr;
+            return Content(reStr, "text/html");
+        }
+
+        #endregion AJax
+        
+        #endregion <%=tableNameUpper%> Manage
+    }
+}
+

@@ -1,0 +1,226 @@
+﻿<%-- 
+Name	: Provider.cst
+Author	: XiongXueHao
+Description: Datebase Provider
+--%>
+<%@ CodeTemplate Language="C#" TargetLanguage="C#" ResponseEncoding="UTF-8" Inherits="CodeSmith.BaseTemplates.OutputFileCodeTemplate"  Debug="False" Description="Creates a simplistic entity object." %>
+<%@ Assembly Name="CodeSmith.BaseTemplates" %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the stored procedures should be based on." %>
+<%@ Property Name="SaveFilePath" Type="System.String" Category="Context" Description="SaveFilePath" %>
+<%@ Property Name="NameSpace" Type="System.String" Category="Context" Description="NameSpace" %>
+<%@ Property Name="Entities" Type="System.String" Category="Context" Description="Entities" %>
+<%@ Property Name="BaseDbName" Type="System.String" Category="Context" Description="BaseDbName" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<% this.OutputFile = SaveFilePath+"\\" + UCase(SourceTable.Name) + "BLL.cs"; %>
+<script runat="template">
+public string LCase(string text)
+{
+    return text.Substring(0,1).ToLower() + text.Substring(1);
+}
+public string UCase(string text)
+{
+    return text.Substring(0,1).ToUpper() + text.Substring(1);
+}
+public string SText(string text)
+{
+    if(text.IndexOf("_")>0)
+        return text;
+    string reText=string.Empty;
+    string lastChar=text.Substring(text.Length-1);
+    if(lastChar=="s" || lastChar=="x" || lastChar=="o")
+    {
+        reText=text+"es";
+    }
+    else if(lastChar=="y")
+    {
+        reText=text.Remove(text.Length - 1,1)+"ies";
+    }
+    else
+    {
+        reText=text+"s";
+    }
+    return reText;
+}
+public string GetCSharpVariableType(ColumnSchema column)
+        {
+            switch(column.DataType)
+            {
+                case DbType.AnsiString: return "string";
+                case DbType.AnsiStringFixedLength: return "string";
+                case DbType.Binary: return "byte[]";
+                case DbType.Boolean: return "bool";
+                case DbType.Byte: return "int";
+                case DbType.Currency: return "decimal";
+                case DbType.Date: return "DataTime";
+                case DbType.DateTime: return "DateTime";
+                case DbType.Decimal: return "decimal";
+                case DbType.Double: return "double";
+                case DbType.Guid: return "Guid";
+                case DbType.Int16: return "short";
+                case DbType.Int32: return "int";
+                case DbType.Int64: return "long";
+                case DbType.Object: return "object";
+                case DbType.SByte: return "sbyte";
+                case DbType.Single: return "float";
+                case DbType.String: return "string";
+                case DbType.StringFixedLength: return "string";
+                case DbType.Time: return "TimeSpan";
+                case DbType.UInt16: return "ushort";
+                case DbType.UInt32: return "uint";
+                case DbType.UInt64: return "ulong";
+                case DbType.VarNumeric: return "decimal";
+            }
+
+            return "string";
+        }
+</script>
+<%string nameSpace=NameSpace;%>
+<%string entities=Entities;%>
+<%string className=UCase(SourceTable.Name)+"BLL";%>
+<%int idPrime=0;%>
+<%string tableName=SourceTable.Name;%>
+<%string tableNameUpper=UCase(SourceTable.Name);%>
+<%string tableNames=SText(SourceTable.Name);%>
+<%string tablePk=SourceTable.Columns[idPrime].Name;%>
+<%string tablePkLower=LCase(SourceTable.Columns[idPrime].Name);%>
+<%string tablePkUpper=UCase(SourceTable.Columns[idPrime].Name);%>
+<%string tablePkType=GetCSharpVariableType(SourceTable.Columns[idPrime]);%>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Web.Security;
+using System.Web;
+using <%=nameSpace%>.Model;
+using <%=nameSpace%>.Model.Enum;
+using <%=nameSpace%>.DAL;
+using <%=nameSpace%>.DAL.Provider;
+using <%=nameSpace%>.Common;
+
+/*
+Name : <%=tableNameUpper%> BLL
+CreatAuthor : XiongXueHao
+CreatTime : <%=DateTime.Now.ToString()%>
+Description : just creat some base methods with codesmith, please add or edit your method.
+*/
+namespace <%=nameSpace%>.BLL.Provider
+{
+    /// <summary>
+    /// <%=tableNameUpper%>
+    /// </summary>
+    public class <%=className%>
+    {
+        #region Instance
+
+        public <%=className%>() { }
+        private static readonly <%=className%> instance = new <%=className%>();
+        internal static <%=className%> Instance
+        {
+            get { return instance; }
+        }
+
+        #endregion
+
+        #region ORM
+
+        /// <summary>
+        /// Insert
+        /// </summary>
+        /// <param name="_<%=tableName%>"></param>
+        /// <returns></returns>
+        public int Insert(<%=tableName%> _<%=tableName%>)
+        {
+            //初始化默认参数
+            //eg : _<%=tableName%>.xxxx = xxxx;
+            <% for(int i=0;i<SourceTable.Columns.Count;i++){ %>
+            //_<%=tableNameUpper%>.<%=SourceTable.Columns[i].Name%> = xxxx;
+            <%}%>
+            return DataRepository.<%=tableNameUpper%>Provider.Insert(_<%=tableName%>);
+        }
+
+        /// <summary>
+        /// Update
+        /// </summary>
+        /// <param name="_<%=tableName%>"></param>
+        /// <param name="<%=tablePkLower%>"></param>
+        /// <returns></returns>
+        public int Update(<%=tableName%> _<%=tableName%>, <%=tablePkType%> <%=tablePkLower%> =  <%if(tablePkType=="int"||tablePkType=="long"){%> 0 <%} else { %> null <%}%>)
+        {
+            if (<%=tablePkLower%> <%if(tablePkType=="int"||tablePkType=="long"){%> > 0 <%} else { %> != null <%}%>)
+            {
+                using (var db = new <%=entities%>())
+                {
+                    <%=tableName%> _new<%=tableNameUpper%> = GetModelBy<%=tablePkUpper%>(<%=tablePkLower%>, db);
+                    //需要修改的参数
+                    //eg : _new<%=tableNameUpper%>.xxxx = _<%=tableName%>.xxxx;
+                    <% for(int i=0;i<SourceTable.Columns.Count;i++){ %>
+                    //_new<%=tableNameUpper%>.<%=SourceTable.Columns[i].Name%> = _<%=tableName%>.<%=SourceTable.Columns[i].Name%>;
+                    <%}%>
+                    return DataRepository.<%=tableNameUpper%>Provider.Update(_new<%=tableNameUpper%>, db);
+                }
+            }
+            else
+            {
+                return DataRepository.<%=tableNameUpper%>Provider.Update(_<%=tableName%>);
+            }
+        }
+
+        /// <summary>
+        /// Update <%=tableName%> ColumnName Value
+        /// </summary>
+        /// <param name="<%=tablePkLower%>"></param>
+        /// <param name="columnName"></param>
+        /// <param name="columnValue"></param>
+        /// <returns></returns>
+        public int UpdateColumnValue(string <%=tablePkLower%>, string columnName, string columnValue)
+        {
+            return DataRepository.<%=tableNameUpper%>Provider.UpdateColumnValue(<%=tablePkLower%>, columnName, columnValue);
+        }
+
+        /// <summary>
+        /// Physically Delete
+        /// </summary>
+        /// <param name="<%=tablePkLower%>"></param>
+        /// <returns></returns>
+        public int Delete(<%=tablePkType%> <%=tablePkLower%>)
+        {
+            return DataRepository.<%=tableNameUpper%>Provider.Delete(<%=tablePkLower%>);
+        }
+
+        /// <summary>
+        /// Batch Physically Delete
+        /// </summary>
+        /// <param name="<%=tablePkLower%>s"></param>
+        /// <returns></returns>
+        public int Delete(List<<%=tablePkType%>> <%=tablePkLower%>s)
+        {
+            if (<%=tablePkLower%>s == null || <%=tablePkLower%>s.Count < 1) return 0;
+            return DataRepository.<%=tableNameUpper%>Provider.Delete(<%=tablePkLower%>s);
+        }
+
+        /// <summary>
+        /// Get model by <%=tablePkLower%>
+        /// </summary>
+        /// <param name="<%=tablePkLower%>"></param>
+        /// <param name="db"></param>
+        /// <returns></returns>
+        public <%=tableName%> GetModelBy<%=tablePkUpper%>(<%=tablePkType%> <%=tablePkLower%>, Model.<%=entities%> db = null)
+        {
+            return DataRepository.<%=tableNameUpper%>Provider.GetModelBy<%=tablePkUpper%>(<%=tablePkLower%>, db);
+        }
+
+        /// <summary>
+        /// Get List By PageParameter
+        /// </summary>
+        /// <param name="parameter"></param>
+        /// <returns></returns>
+        public IEnumerable<<%=tableName%>> GetList(<%=tableNameUpper%>Parameter parameter)
+        {
+            return DataRepository.<%=tableNameUpper%>Provider.GetList(parameter);
+        }
+
+        #endregion
+    }
+}
+

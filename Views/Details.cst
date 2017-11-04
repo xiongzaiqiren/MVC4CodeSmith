@@ -1,0 +1,104 @@
+﻿<%-- 
+Name	: Details.cst
+Author	: XiongXueHao
+Description: Mvc View Details
+--%>
+<%@ CodeTemplate Language="C#" TargetLanguage="C#" ResponseEncoding="UTF-8" Inherits="CodeSmith.BaseTemplates.OutputFileCodeTemplate"  Debug="False" Description="Creates a simplistic entity object." %>
+<%@ Assembly Name="CodeSmith.BaseTemplates" %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the stored procedures should be based on." %>
+<%@ Property Name="SaveFilePath" Type="System.String" Category="Context" Description="SaveFilePath" %>
+<%@ Property Name="NameSpace" Type="System.String" Category="Context" Description="NameSpace" %>
+<%@ Property Name="Entities" Type="System.String" Category="Context" Description="Entities" %>
+<%@ Property Name="BaseDbName" Type="System.String" Category="Context" Description="BaseDbName" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<% this.OutputFile =SaveFilePath + "\\" + UCase(SourceTable.Name) + "Details.cshtml"; %>
+<script runat="template">
+public string UCase(string text)
+{
+    return text.Substring(0,1).ToUpper() + text.Substring(1);
+}
+public string GetCSharpVariableType(ColumnSchema column)
+        {
+            switch(column.DataType)
+            {
+                case DbType.AnsiString: return "string";
+                case DbType.AnsiStringFixedLength: return "string";
+                case DbType.Binary: return "byte[]";
+                case DbType.Boolean: return "bool";
+                case DbType.Byte: return "int";
+                case DbType.Currency: return "decimal";
+                case DbType.Date: return "DataTime";
+                case DbType.DateTime: return "DateTime";
+                case DbType.Decimal: return "decimal";
+                case DbType.Double: return "double";
+                case DbType.Guid: return "Guid";
+                case DbType.Int16: return "short";
+                case DbType.Int32: return "int";
+                case DbType.Int64: return "long";
+                case DbType.Object: return "object";
+                case DbType.SByte: return "sbyte";
+                case DbType.Single: return "float";
+                case DbType.String: return "string";
+                case DbType.StringFixedLength: return "string";
+                case DbType.Time: return "TimeSpan";
+                case DbType.UInt16: return "ushort";
+                case DbType.UInt32: return "uint";
+                case DbType.UInt64: return "ulong";
+                case DbType.VarNumeric: return "decimal";
+            }
+
+            return "string";
+        }
+</script>
+<%string nameSpace=NameSpace;%>
+<%string tableName=SourceTable.Name;%>
+<%string tableNameUpper=UCase(SourceTable.Name);%>
+@using <%=nameSpace%>.Common;
+@using <%=nameSpace%>.Model;
+@using <%=nameSpace%>.Model.Enum;
+@using <%=nameSpace%>.BLL;
+@model <%=nameSpace%>.Model.<%=tableName%>
+@{
+    ViewBag.Title = "查看<%=tableName%>";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@section head {
+}
+<div id="tab">
+    <ul>
+        <li class="Current"><a href="#" onfocus="this.blur()"><span>@ViewBag.Title</span></a>
+        </li>
+    </ul>
+</div>
+<div id="middle" style="top: 25px !important;">
+    <div class="editor">
+        <fieldset>
+            <legend>信息</legend>
+        <table class="eTable">
+        <% for(int i=0;i<SourceTable.Columns.Count;i++){ %>
+            <tr class="eTr">
+                <td class="name">
+                    @Html.LabelFor(model => model.<%=SourceTable.Columns[i].Name%>)
+                </td>
+                <td style="text-align:left;">
+					<%if(GetCSharpVariableType(SourceTable.Columns[i])=="bool"){%>
+					@if (Model.<%=SourceTable.Columns[i].Name%> == true)
+                  {
+                      <span style="color:green;">是</span>
+                  }
+                  else
+                  {
+                      <span style="color:red;">否</span>
+                  }
+					<%} else { %>
+					@Html.DisplayFor(model => model.<%=SourceTable.Columns[i].Name%>)
+					<%}%>
+                </td>
+            </tr>
+        <%}%>
+        </table>
+        </fieldset>
+    </div>
+</div>
+

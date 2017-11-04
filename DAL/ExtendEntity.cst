@@ -1,0 +1,101 @@
+﻿<%-- 
+Name:	ExtendEntity.cst
+Author:	XiongXueHao
+Description:	The expansion of the data provider
+--%>
+<%@ CodeTemplate Language="C#" TargetLanguage="C#" ResponseEncoding="UTF-8" Inherits="CodeSmith.BaseTemplates.OutputFileCodeTemplate"  Debug="False" Description="The expansion of the data provider." %>
+<%@ Assembly Name="CodeSmith.BaseTemplates" %>
+<%@ Property Name="SaveFilePath" Type="System.String" Category="Context" Description="SaveFilePath" %>
+<%@ Property Name="NameSpace" Type="System.String" Category="Context" Description="NameSpace" %>
+<%@ Assembly Name="SchemaExplorer" %> 
+<%@ Import Namespace="SchemaExplorer" %>
+<% this.OutputFile = SaveFilePath+"\\ExtendEntity.cs"; %>
+<script runat="template">
+public string UCase(string text)
+{
+    return text.Substring(0,1).ToUpper() + text.Substring(1);
+}
+</script>
+<%string nameSpace=NameSpace;%>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Text;
+using System.Data;
+using <%=nameSpace%>.Model;
+
+/*
+Name : ExtendEntity
+CreatAuthor : XiongXueHao
+CreatTime : <%=DateTime.Now.ToString()%>
+Description : just creat some base methods with codesmith, please add or edit your method.
+*/
+namespace <%=nameSpace%>.DAL
+{
+    public static class ExtendEntity
+    {
+		/// <summary>
+        /// 获取结果集总数，支持多字段排序，多个字段间用英文半角逗号分隔
+        /// </summary>
+        /// <typeparam name="T">数据类型</typeparam>
+        /// <param name="query">结果集</param>
+        /// <param name="parameters">页面参数</param>
+        /// <returns></returns>
+        public static IEnumerable<T> GetPageList<T>(this IQueryable<T> query, PageParameter parameters)
+        {
+           parameters.RecordCount = query.Count();
+            if (!String.IsNullOrEmpty(parameters.OrderBy))
+            {
+                //query = query.DataSorting(parameters.OrderBy, parameters.IsAsc, true);
+
+                //支持多字段排序
+                string[] orderBys = parameters.OrderBy.Split(',');
+                for (int i = 0; i < orderBys.Length; i++)
+                {
+                    string orderBy = orderBys[i];
+                    bool isAsc = orderBy.StartsWith("-") ? false : (orderBy.StartsWith("+") ? true : parameters.IsAsc);
+                    orderBy = orderBy.TrimStart('-').TrimStart('+');
+
+                    query = query.DataSorting(orderBy, isAsc, i == 0 ? true : false);
+                }
+            }
+
+            if (parameters.PageSize < 1)
+                return query;
+
+            if (parameters.PageIndex > 1)
+                query = query.Skip((parameters.PageIndex - 1) * parameters.PageSize).Take(parameters.PageSize);
+            return query.Take(parameters.PageSize).ToList();
+        }
+
+		/// <summary>
+        /// 对数据结果集排序
+        /// </summary>
+        /// <typeparam name="T">数据类型</typeparam>
+        /// <param name="source">结果集</param>
+        /// <param name="orderBy">排序字段名称</param>
+        /// <param name="IsASC">排序规则</param>
+        /// <param name="isFirst"></param>
+        /// <returns></returns>
+        public static IQueryable<T> DataSorting<T>(this IQueryable<T> source, string orderBy, bool IsASC, bool isFirst)
+        {
+            var sortingDir = (isFirst ? "Order" : "Then") + (IsASC ? "By" : "ByDescending");
+
+            ParameterExpression param = Expression.Parameter(typeof(T), orderBy);
+
+            PropertyInfo pi = typeof(T).GetProperty(orderBy);
+            Type[] types = new Type[2];
+            types[0] = typeof(T);
+            types[1] = pi.PropertyType;
+            var lambda = Expression.Lambda(Expression.Property(param, orderBy), param);
+
+            Expression expr = Expression.Call(typeof(Queryable), sortingDir, types, source.AsQueryable().Expression, lambda);
+            IQueryable<T> query = source.AsQueryable().Provider.CreateQuery<T>(expr);
+            return query;
+        }
+	
+    }
+}
+

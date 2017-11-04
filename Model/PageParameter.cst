@@ -1,0 +1,285 @@
+﻿<%-- 
+Name	: PageParameter
+Author	: XiongXueHao
+Description: PageParameter
+--%>
+<%@ CodeTemplate Language="C#" TargetLanguage="C#" ResponseEncoding="UTF-8" Inherits="CodeSmith.BaseTemplates.OutputFileCodeTemplate"  Debug="False" Description="Creates a simplistic entity object." %>
+<%@ Assembly Name="CodeSmith.BaseTemplates" %>
+<%@ Property Name="SourceDatabase" Type="SchemaExplorer.DatabaseSchema" Category="Context"  Description="Database" %>
+<%@ Property Name="SaveFilePath" Type="System.String" Category="Context" Description="SaveFilePath" %>
+<%@ Property Name="NameSpace" Type="System.String" Category="Context" Description="NameSpace" %>
+<%@ Property Name="Entities" Type="System.String" Category="Context" Description="Entities" %>
+<%@ Property Name="BaseDbName" Type="System.String" Category="Context" Description="BaseDbName" %>
+<%@ Assembly Name="SchemaExplorer" %> 
+<%@ Import Namespace="SchemaExplorer" %>
+<% this.OutputFile = SaveFilePath + "\\PageParameter.cs"; %>
+<script runat="template">
+public string UCase(string text)
+{
+    return text.Substring(0,1).ToUpper() + text.Substring(1);
+}
+public string GetCSharpVariableType(ColumnSchema column)
+        {
+            switch(column.DataType)
+            {
+                case DbType.AnsiString: return "string";
+                case DbType.AnsiStringFixedLength: return "string";
+                case DbType.Binary: return "byte[]";
+                case DbType.Boolean: return "bool";
+                case DbType.Byte: return "int";
+                case DbType.Currency: return "decimal";
+                case DbType.Date: return "DataTime";
+                case DbType.DateTime: return "DateTime";
+                case DbType.Decimal: return "decimal";
+                case DbType.Double: return "double";
+                case DbType.Guid: return "Guid";
+                case DbType.Int16: return "short";
+                case DbType.Int32: return "int";
+                case DbType.Int64: return "long";
+                case DbType.Object: return "object";
+                case DbType.SByte: return "sbyte";
+                case DbType.Single: return "float";
+                case DbType.String: return "string";
+                case DbType.StringFixedLength: return "string";
+                case DbType.Time: return "TimeSpan";
+                case DbType.UInt16: return "ushort";
+                case DbType.UInt32: return "uint";
+                case DbType.UInt64: return "ulong";
+                case DbType.VarNumeric: return "decimal";
+            }
+
+            return "string";
+        }
+</script>
+<%string nameSpace=NameSpace;%>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+/*
+Name : PageParameter
+CreatAuthor : XiongXueHao
+CreatTime : <%=DateTime.Now.ToString()%>
+Description : just creat some base methods with codesmith, please add or edit your method.
+*/
+namespace <%=nameSpace%>.Model
+{
+	/// <summary>
+	/// 捕获异常信息扩展
+	/// </summary>
+	public static class ExceptionExtend
+	{
+		/// <summary>
+		/// 捕获实体验证错误
+		/// </summary>
+		/// <param name="ex">实体验证错误实例</param>
+		/// <returns>视觉友好的错误信息文本</returns>
+		private static string Exception(System.Data.Entity.Validation.DbEntityValidationException ex)
+		{
+			if (ex != null && ex.EntityValidationErrors != null)
+			{
+				StringBuilder sb = new StringBuilder();
+				foreach (System.Data.Entity.Validation.DbEntityValidationResult result in ex.EntityValidationErrors)
+				{
+					if (result != null && result.ValidationErrors != null)
+					{
+						foreach (System.Data.Entity.Validation.DbValidationError error in result.ValidationErrors)
+						{
+							sb.AppendFormat("【PropertyName={0}，ErrorMessage={1}】", error.PropertyName, error.ErrorMessage);
+						}
+					}
+				}
+
+				//ex.EntityValidationErrors.First().ValidationErrors.ToList().ForEach(i =>
+				//{
+				//	sb.AppendFormat("属性为：{0}，信息为：{1}\n\r", i.PropertyName, i.ErrorMessage);
+				//});
+
+				return sb.ToString();
+			}
+			return string.Empty;
+		}
+		private static string Exception(System.Data.SqlClient.SqlException ex)
+		{
+			if (ex != null && ex.Data != null && ex.Data.Values != null && ex.Data.Values.Count > 0 && ex.Errors != null && ex.Errors.Count > 0)
+			{
+				StringBuilder sb = new StringBuilder();
+				sb.AppendFormat("【{0}】", ex.Message);
+				return sb.ToString();
+			}
+			return string.Empty;
+		}
+		private static string Exception(System.Data.Entity.Infrastructure.DbUpdateException ex)
+		{
+			if (ex != null && ex.Data != null && ex.Data.Values != null && ex.Data.Values.Count > 0)
+			{
+				StringBuilder sb = new StringBuilder();
+				sb.AppendFormat("【{0}】", ex.Message);
+				return sb.ToString();
+			}
+			else
+			{
+				if (ex.Source == "EntityFramework" && ex.InnerException != null && (ex.InnerException).Source == "System.Data.Entity")
+				{
+					if ((ex.InnerException).InnerException != null && ((ex.InnerException).InnerException).Source.IndexOf("SqlClient Data Provider") > -1)
+					{
+						if ((ex.InnerException).InnerException.GetType().Name == "SqlException")
+						{
+							return Exception((System.Data.SqlClient.SqlException)(ex.InnerException).InnerException);
+						}
+					}
+				}
+			}
+			return string.Empty;
+		}
+		
+		/// <summary>
+		/// 分析捕获的异常，分析显示已知的异常信息
+		/// </summary>
+		/// <param name="ex"></param>
+		/// <returns></returns>
+		public static string ShowMessage(System.Exception ex)
+		{
+			if (ex != null && !string.IsNullOrWhiteSpace(ex.Message))
+			{
+				StringBuilder sb = new StringBuilder();
+				switch (ex.GetType().FullName)
+				{
+					case "System.Data.SqlClient.SqlException":
+						sb.AppendFormat("{0} ", Exception((System.Data.SqlClient.SqlException)ex));
+						break;
+
+					case "System.Data.Entity.Validation.DbEntityValidationException":
+						sb.AppendFormat("{0} ", Exception((System.Data.Entity.Validation.DbEntityValidationException)ex));
+						break;
+					case "System.Data.Entity.Infrastructure.DbUpdateException":
+						sb.AppendFormat("{0} ", Exception((System.Data.Entity.Infrastructure.DbUpdateException)ex));
+						break;
+
+					case "System.Runtime.InteropServices.SEHException": /* 封装Win32结构异常处理信息的异常 */
+						sb.AppendFormat("{0} ", ex.Message);
+						break;
+					#region 常见基本错误类型
+					//case "System.ArgumentException": /* 方法的参数是非法的 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.ArgumentNullException": /* 一个空参数传递给方法,该方法不能接受该参数 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.ArgumentOutOfRangeException": /* 参数值超出范围 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.ArithmeticException": /* 出现算术上溢或者下溢 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.ArrayTypeMismatchException": /* 试图在数组中存储错误类型的对象 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.BadImageFormatException": /* 图形的格式错误 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.DivideByZeroException": /* 除零异常 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.DllNotFoundException": /* 找不到引用的DLL */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.FormatException": /* 参数格式错误 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.IndexOutOfRangeException": /* 数组索引超出范围，当一个数组的下标超出范围时运行时引发。 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.InvalidCastException": /* 使用无效的类 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.InvalidOperationException": /* 方法的调用时间错误，当对方法的调用对对象的当前状态无效时，由某些方法引发。 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.MethodAccessException": /* 试图访问思友或者受保护的方法 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.MissingMemberException": /* 访问一个无效版本的DLL */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.NotFiniteNumberException": /* 对象不是一个有效的成员 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.NotSupportedException": /* 调用的方法在类中没有实现 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.NullReferenceException": /* 试图使用一个未分配的引用，当一个空对象被引用时运行时引发。 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.OutOfMemoryException": /* 内存空间不够 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.PlatformNotSupportedException": /* 平台不支持某个特定属性时抛出该错误 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.StackOverflowException": /* 堆栈溢出 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//case "System.SystemException": /* 其他用户可处理的异常的基本类 */
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					//default:
+					//	sb.AppendFormat("{0} ", ex.Message);
+					//	break;
+					#endregion
+				}
+				if (ex.InnerException != null)
+					sb.AppendFormat("{0} ", ShowMessage(ex.InnerException));
+                else
+                    sb.AppendFormat("{0} ", ex.Message);
+				return sb.ToString();
+			}
+			return string.Empty;
+		}
+		
+	}
+	
+    /// <summary>
+    /// page parameter base class
+    /// </summary>
+    public class PageParameter
+    {
+        public int PageSize { get; set; }
+        public int PageIndex { get; set; }
+        public int RecordCount { get; set; }
+        public string OrderBy { get; set; }
+        public bool IsAsc { get; set; }
+        public int PageCount
+        {
+            get
+            {
+                return RecordCount % PageSize > 0 ? (RecordCount / PageSize + 1) : RecordCount / PageSize;
+            }
+        }
+    }
+    
+    <%  
+    foreach (TableSchema table in SourceDatabase.Tables)  
+    {
+        string tableName=UCase(table.Name);
+    %>
+    /// <summary>
+    /// <%=tableName%>
+    /// </summary>
+    public class <%=tableName%>Parameter : PageParameter
+    {
+        //只是根据表结构生成了代码方便修改，请根据需求修改
+        <% for(int i=0;i<table.Columns.Count;i++)
+        {
+        %>
+        public <%=GetCSharpVariableType(table.Columns[i]) + (GetCSharpVariableType(table.Columns[i])!="string"?"?":"")%> <%=table.Columns[i].Name%> { get; set; }
+        <%}%>
+        
+    }
+        
+    <%
+    }
+    %> 
+}
+

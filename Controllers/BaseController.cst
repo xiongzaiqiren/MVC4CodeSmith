@@ -1,0 +1,53 @@
+﻿<%-- 
+Name: BaseController.cst
+Author	: XiongXueHao
+Description: Mvc Controller
+--%>
+<%@ CodeTemplate Language="C#" TargetLanguage="C#" ResponseEncoding="UTF-8" Inherits="CodeSmith.BaseTemplates.OutputFileCodeTemplate"  Debug="False" Description="Creates a simplistic entity object." %>
+<%@ Assembly Name="CodeSmith.BaseTemplates" %>
+<%@ Property Name="SaveFilePath" Type="System.String" Category="Context" Description="SaveFilePath" %>
+<%@ Property Name="NameSpace" Type="System.String" Category="Context" Description="NameSpace" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<% this.OutputFile =SaveFilePath+ "\\BaseController.cs"; %>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+using <%=NameSpace%>.Model;
+using <%=NameSpace%>.BLL;
+using <%=NameSpace%>.Common;
+using Lib;
+
+/*
+Name : Mvc BaseController
+CreatAuthor : XiongXueHao
+CreatTime : <%=DateTime.Now.ToString()%>
+Description : just creat some base methods with codesmith, please add or edit your method.
+*/
+namespace <%=NameSpace%>.Mis.Controllers
+{
+    public class BaseController : SharedController
+    {
+		private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        public BaseController()
+        {
+		
+        }
+    
+        /// <summary>
+        /// 操作提示
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <param name="returnUrl"></param>
+        /// <returns></returns>
+        public ActionResult OperationTip(string msg, string returnUrl = null)
+        {
+            return Redirect(string.Format("~/Shared/Tip?msg={0}&returnUrl={1}", msg, HttpContext.Server.UrlEncode(returnUrl)));
+        }
+       
+    }
+}
+

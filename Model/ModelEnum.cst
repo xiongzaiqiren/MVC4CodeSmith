@@ -1,0 +1,220 @@
+﻿<%-- 
+Name:	ModelEnum.cst
+Author:	XiongXueHao
+Description:	Enumerated type
+--%>
+<%@ CodeTemplate Language="C#" TargetLanguage="C#" ResponseEncoding="UTF-8" Inherits="CodeSmith.BaseTemplates.OutputFileCodeTemplate"  Debug="False" Description="Enumerated type." %>
+<%@ Assembly Name="CodeSmith.BaseTemplates" %>
+<%@ Property Name="SaveFilePath" Type="System.String" Category="Context" Description="SaveFilePath" %>
+<%@ Property Name="NameSpace" Type="System.String" Category="Context" Description="NameSpace" %>
+<%@ Assembly Name="SchemaExplorer" %> 
+<%@ Import Namespace="SchemaExplorer" %>
+<% this.OutputFile =SaveFilePath+"\\ModelEnum.cs"; %>
+<%string nameSpace=NameSpace;%>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Web.Mvc;
+
+/*
+Name : ModelEnum
+CreatAuthor : XiongXueHao
+CreatTime : <%=DateTime.Now.ToString()%>
+Description : just creat some base methods with codesmith, please add or edit your method.
+*/
+namespace <%=nameSpace%>.Model.Enum
+{
+    #region 语言种类
+
+    /// <summary>
+    /// 语言种类
+    /// </summary>
+    public enum Language
+    {
+	    /// <summary>
+	    /// 英语
+	    /// </summary>
+        en_US = 0,
+		/// <summary>
+	    /// 中文
+	    /// </summary>
+        zh_CN = 1
+    }
+
+    #endregion
+	
+	#region 多语言实现方法
+
+    /// <summary>
+    /// 定义枚举多语言属性
+    /// </summary>
+    [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+    public class MultiLanguageAttribute : Attribute
+    {
+        public MultiLanguageAttribute(object key, string value)
+        {
+            this.key = key;
+            this.value = value;
+        }
+
+        public object key { get; private set; }
+        public string value { get; private set; }
+    }
+
+    #region 扩展enum属性
+
+    public static class MultiLanguageExtensions
+    {
+        /// <summary>
+        /// 当前语言值
+        /// </summary>
+        /// <param name="enumObject"></param>
+        /// <returns></returns>
+        public static string Language(this System.Enum enumObject)
+        {
+            return Language(enumObject, CurrentCultureName.Replace('-', '_'));
+        }
+
+        /// <summary>
+        /// 枚举指定语言显示
+        /// </summary>
+        /// <param name="enumObject"></param>
+        /// <param name="language"></param>
+        /// <returns></returns>
+        public static string Language(this System.Enum enumObject, string language)
+        {
+            string cultureName = language.Replace('-', '_');
+
+            Type t = enumObject.GetType();
+            string s = enumObject.ToString();
+            MultiLanguageAttribute[] os = null;
+            try
+            {
+                os = (MultiLanguageAttribute[])t.GetField(s).GetCustomAttributes(typeof(MultiLanguageAttribute), false);
+            }
+            catch { }
+            if (os != null)
+            {
+                foreach (MultiLanguageAttribute o in os)
+                {
+                    if (o.key.ToString() == cultureName)
+                    {
+                        s = o.value;
+                    }
+                }
+            }
+
+            return s;
+        }
+
+        /// <summary>
+        /// 枚举转换为字典，并翻译为当前语言
+        /// </summary>
+        /// <param name="em</param>
+        /// <returns></returns>
+        public static IDictionary<int, string> ToIEnumerable(this System.Enum enumObject)
+        {
+            string cultureName = CurrentCultureName.Replace('-', '_'); //当前系统语言
+            IDictionary<int, string> dic = new Dictionary<int, string>();
+
+            Array array = System.Enum.GetValues(enumObject.GetType());//当前枚举的所有项
+            Type t = enumObject.GetType();//当前枚举类型
+            foreach (int val in array)
+            {
+                string emName = System.Enum.GetName(enumObject.GetType(), val);
+                string emKey = emName;
+                MultiLanguageAttribute[] os = null;
+                try
+                {
+                    os = (MultiLanguageAttribute[])t.GetField(emName).GetCustomAttributes(typeof(MultiLanguageAttribute), false);
+                }
+                catch { }
+                if (os != null)
+                {
+                    foreach (MultiLanguageAttribute la in os)
+                    {
+                        if (la.key.ToString() == cultureName)
+                        {
+                            emName = la.value;
+                            break;
+                        }
+                    }
+                }
+                dic.Add(val, emName);
+            }
+
+            return dic;
+        }
+
+
+        /// <summary>
+        /// 枚举转换为selectlist，并翻译为当前语言
+        /// </summary>
+        /// <param name="enumObject"></param>
+        /// <returns></returns>
+        public static SelectList ToSelectList(this System.Enum enumObject)
+        {
+            IDictionary<int, string> dic = enumObject.ToIEnumerable();
+            return new SelectList(dic, "Key", "Value");
+        }
+        /// <summary>
+        /// 当前用户地区编码
+        /// </summary>
+        public static string CurrentCultureName
+        {
+            get
+            {
+                return System.Threading.Thread.CurrentThread.CurrentCulture.Name;
+            }
+        }
+
+    }
+
+    #endregion
+
+    #endregion
+	
+    #region 用户类型
+	/// <summary>
+	/// 性别
+	/// </summary>
+	public enum SexType
+	{
+		/// <summary>
+		/// 女
+		/// </summary>
+		[MultiLanguage(Language.zh_CN, "女")]
+		women = 0,
+		/// <summary>
+		/// 男
+		/// </summary>
+		[MultiLanguage(Language.zh_CN, "男")]
+		men = 1
+	}
+	
+    /// <summary>
+    /// 用户类型
+    /// </summary>
+    public enum UserType
+    {
+        /// <summary>
+        /// 资源方
+        /// </summary>
+        [MultiLanguage(Language.zh_CN, "资源方")]
+        ResourcePartner = 1,
+        /// <summary>
+        /// 合作网站
+        /// </summary>
+        [MultiLanguage(Language.zh_CN, "合作网站")]
+        WebsitePartner = 0,
+        /// <summary>
+        /// 合作网站&资源方
+        /// </summary>
+        [MultiLanguage(Language.zh_CN, "合作网站&资源方")]
+        WebsiteAndResource = 2
+    }
+
+    #endregion
+}
+

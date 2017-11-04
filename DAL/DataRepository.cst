@@ -1,0 +1,69 @@
+﻿<%-- 
+Name	: DataRepository
+Author	: XiongXueHao
+Description: Datebase DataRepository
+--%>
+<%@ CodeTemplate Language="C#" TargetLanguage="C#" ResponseEncoding="UTF-8" Inherits="CodeSmith.BaseTemplates.OutputFileCodeTemplate"  Debug="False" Description="Creates a simplistic entity object." %>
+<%@ Assembly Name="CodeSmith.BaseTemplates" %>
+<%@ Property Name="SourceDatabase" Type="SchemaExplorer.DatabaseSchema" Category="Context"  Description="Database" %>
+<%@ Property Name="SaveFilePath" Type="System.String" Category="Context" Description="SaveFilePath" %>
+<%@ Property Name="NameSpace" Type="System.String" Category="Context" Description="NameSpace" %>
+<%@ Property Name="Entities" Type="System.String" Category="Context" Description="Entities" %>
+<%@ Property Name="BaseDbName" Type="System.String" Category="Context" Description="BaseDbName" %>
+<%@ Assembly Name="SchemaExplorer" %> 
+<%@ Import Namespace="SchemaExplorer" %>
+<% this.OutputFile = SaveFilePath+"\\DataRepository.cs"; %>
+<script runat="template">
+public string UCase(string text)
+{
+    return text.Substring(0,1).ToUpper() + text.Substring(1);
+}
+</script>
+<%string nameSpace=NameSpace;%>
+<%string entities=Entities;%>
+<%string baseDbName=BaseDbName;%>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using <%=nameSpace%>.DAL.Provider;
+using <%=nameSpace%>.Model;
+
+/*
+Name : DataRepository
+CreatAuthor : XiongXueHao
+CreatTime : <%=DateTime.Now.ToString()%>
+Description : just creat some base methods with codesmith, please add or edit your method.
+*/
+namespace <%=nameSpace%>.DAL
+{
+    public class DataRepository
+    {
+        /// <summary>
+        /// Get <%=baseDbName%>
+        /// </summary>
+        /// <returns></returns>
+        public static <%=entities%> Get<%=baseDbName%>Context()
+        {
+            return new <%=entities%>();
+        }
+        
+        <%  
+        foreach (TableSchema table in SourceDatabase.Tables)  
+        {
+            string tableName=UCase(table.Name);
+        %>
+        /// <summary>
+        /// <%=tableName%>Provider
+        /// </summary>
+        public static <%=tableName%>Provider <%=tableName%>Provider
+        {
+            get { return <%=tableName%>Provider.Instance; }
+        }
+        
+        <%
+        }
+        %> 
+    }
+}
+

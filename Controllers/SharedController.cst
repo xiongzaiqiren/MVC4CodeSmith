@@ -1,0 +1,146 @@
+﻿<%-- 
+Name: SharedController.cst
+Author	: XiongXueHao
+Description: Mvc Controller
+--%>
+<%@ CodeTemplate Language="C#" TargetLanguage="C#" ResponseEncoding="UTF-8" Inherits="CodeSmith.BaseTemplates.OutputFileCodeTemplate"  Debug="False" Description="Creates a simplistic entity object." %>
+<%@ Assembly Name="CodeSmith.BaseTemplates" %>
+<%@ Property Name="SaveFilePath" Type="System.String" Category="Context" Description="SaveFilePath" %>
+<%@ Property Name="NameSpace" Type="System.String" Category="Context" Description="NameSpace" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<% this.OutputFile =SaveFilePath+ "\\SharedController.cs"; %>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+using System.IO;
+using Lib;
+
+/*
+Name : Mvc SharedController
+CreatAuthor : XiongXueHao
+CreatTime : <%=DateTime.Now.ToString()%>
+Description : just creat some base methods with codesmith, please add or edit your method.
+*/
+namespace <%=NameSpace%>.Mis.Controllers
+{
+    public class SharedController : Controller
+    {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        //
+        // GET: /Shared/
+
+        public ActionResult Index()
+        {
+            return View();
+        }
+    
+        /// <summary>
+		/// 操作提示
+		/// </summary>
+		/// <param name="msg"></param>
+		/// <param name="returnUrl"></param>
+		/// <returns></returns>
+		public ActionResult Tip(string msg, string returnUrl = null)
+		{
+			string reStr = "<script>alert('" + msg + "');";
+			reStr += "try{window.parent.frames.gridReloadByChild();}catch(err){";
+			if (!string.IsNullOrEmpty(returnUrl))
+			{
+				reStr += "location.href='" + returnUrl + "';";
+			}
+			else
+			{
+				reStr += "history.go(-1);";
+			}
+			reStr += "}</script>";
+			return Content(reStr, "text/html");
+		}
+		
+		
+        /// <summary>
+        /// 操作提示
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <param name="returnUrl"></param>
+        /// <returns></returns>
+        public ActionResult Tip2(string msg, string returnUrl = null)
+        {
+            string reStr = "<script>alert('" + msg + "');";
+            reStr += "";
+            if (!string.IsNullOrEmpty(returnUrl))
+            {
+                reStr += "location.href='" + returnUrl + "';";
+            }
+            else
+            {
+                reStr += "history.go(-1);";
+            }
+
+            reStr += "</script>";
+            return Content(reStr, "text/html");
+        }
+
+        /// <summary>
+        /// 上传文件
+        /// </summary>
+        /// <returns></returns>
+        public ActionResult UpFile(FormCollection form)
+        {
+            try
+            {
+                //上传文件类型
+                string type = RequestHelper.Query("type").ToLower();
+                //上传的目标文件夹
+                string to = RequestHelper.Query("to").ToLower();
+                //上传图片上限
+                int imgMaxSize = ConfigHelper.GetAppSetting("IMG_MAX_SIZE").ToInt();
+                //图片预览根路径
+                string imgViewUrl = ConfigHelper.GetAppSetting("IMG_VIEW_URL");
+                HttpPostedFileBase uploadFile = Request.Files[0];
+                string fileExt = System.IO.Path.GetExtension(uploadFile.FileName).ToLower();
+                int fileSize = uploadFile.ContentLength / 1024;
+                switch (type)
+                {
+                    case "pic":
+						string imageSuffixName = "|.jpg|.jpeg|.png|.gif|.bmp|";
+						if (imageSuffixName.IndexOf(fileExt) < 1)
+						{
+							return Content("{error:\"格式错误，请上传图片格式文件gif、png、jpg、bmp\"}", "text/html");
+						}
+						else if (fileSize > imgMaxSize)
+						{
+							return Content("{\"error\":\"请上传规定大小以内图片！\"}", "text/html");
+						}
+                        break;
+                    case "file":
+                        //上传文件处理
+                        break;
+                    default:
+                        return Content("{\"error\":\"不允许的上传格式\"}", "text/html");
+                }
+                string basePath = ConfigHelper.GetAppSetting("UPLOAD_FILE_BASE_PATH");
+                string toPath = !string.IsNullOrEmpty(to) ? to : "other";
+                string dir = DateTime.Now.ToString("yyyyMM");
+                string filePath = basePath + toPath + "\\" + dir + "\\";
+                string fileName = Guid.NewGuid().ToString() + fileExt;
+                if (!Directory.Exists(filePath))
+                {
+                    Directory.CreateDirectory(filePath);
+                }
+                uploadFile.SaveAs(Path.Combine(filePath, fileName));
+                return Content("{\"filePath\":\"" + toPath + "/" + dir + "/" + fileName + "\",\"viewPath\":\"" +
+                     imgViewUrl + toPath + "/" + dir + "/" + fileName + "\"}", "text/html");
+            }
+            catch
+            {
+                return Content("{\"error\":\"上传文件失败！\"}", "text/html");
+            }
+        }
+       
+    }
+}
+

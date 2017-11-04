@@ -1,0 +1,101 @@
+﻿<%-- 
+Name:	APIModel.cst
+Author:	XiongXueHao
+Description:	APIModel
+--%>
+<%@ CodeTemplate Language="C#" TargetLanguage="C#" ResponseEncoding="UTF-8" Inherits="CodeSmith.BaseTemplates.OutputFileCodeTemplate"  Debug="False" Description="APIModel." %>
+<%@ Assembly Name="CodeSmith.BaseTemplates" %>
+<%@ Property Name="SaveFilePath" Type="System.String" Category="Context" Description="SaveFilePath" %>
+<%@ Property Name="NameSpace" Type="System.String" Category="Context" Description="NameSpace" %>
+<%@ Assembly Name="SchemaExplorer" %> 
+<%@ Import Namespace="SchemaExplorer" %>
+<% this.OutputFile =SaveFilePath+"\\APIModel.cs"; %>
+<%string nameSpace=NameSpace;%>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+
+/*
+Name : APIModel
+CreatAuthor : XiongXueHao
+CreatTime : <%=DateTime.Now.ToString()%>
+Description : just creat some base methods with codesmith, please add or edit your method.
+*/
+namespace <%=nameSpace%>.Model
+{
+    /// <summary>
+    /// API基础模型
+    /// </summary>
+    [Serializable]
+    [DataContract]
+    public class APIBaseModel
+    {
+        /// <summary>
+        /// 状态码
+        /// </summary>
+        [DataMember(EmitDefaultValue = true, IsRequired = true)]
+        public int status { get; set; }
+        /// <summary>
+        /// 状态信息
+        /// </summary>
+        [DataMember(EmitDefaultValue = true, IsRequired = true)]
+        public string message { get; set; }
+
+        //[DataMember]
+        //public dynamic Data { get; set; }
+    }
+
+    /// <summary>
+    /// 用于分页列表的API基础模型
+    /// </summary>
+    [Serializable]
+    [DataContract]
+    public class APIListBaseModel : APIBaseModel
+    {
+        /// <summary>
+        /// 当前页大小
+        /// </summary>
+        [DataMember(EmitDefaultValue = true, IsRequired = true)]
+        public int PageSize { get; set; }
+        /// <summary>
+        /// 当前页码
+        /// </summary>
+        [DataMember(EmitDefaultValue = true, IsRequired = true)]
+        public int PageIndex { get; set; }
+        /// <summary>
+        /// 记录总数
+        /// </summary>
+        [DataMember(EmitDefaultValue = true, IsRequired = true)]
+        public int RecordCount { get; set; }
+        /// <summary>
+        /// 页总数
+        /// </summary>
+        [DataMember(EmitDefaultValue = true, IsRequired = false)]
+        public int PageCount { get; set; }
+
+        //[DataMember]
+        //public dynamic List { get; set; }
+    }
+
+    /// <summary>
+    /// API模型
+    /// </summary>
+    [Serializable]
+    [DataContract]
+    public class APIModel : APIBaseModel
+    {
+        /// <summary>
+        /// 数据
+        /// </summary>
+        [DataMember(EmitDefaultValue = true, IsRequired = true)]
+        public dynamic Data { get; set; }
+
+        /// <summary>
+        /// 自定义内容
+        /// </summary>
+        [DataMember(EmitDefaultValue = true, IsRequired = false)]
+        public dynamic Custom { get; set; }
+    }
+}
+

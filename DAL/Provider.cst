@@ -1,0 +1,314 @@
+﻿<%-- 
+Name	: Provider.cst
+Author	: XiongXueHao
+Description: Datebase Provider
+--%>
+<%@ CodeTemplate Language="C#" TargetLanguage="C#" ResponseEncoding="UTF-8" Inherits="CodeSmith.BaseTemplates.OutputFileCodeTemplate"  Debug="False" Description="Creates a simplistic entity object." %>
+<%@ Assembly Name="CodeSmith.BaseTemplates" %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Datatable" %>
+<%@ Property Name="SaveFilePath" Type="System.String" Category="Context" Description="SaveFilePath" %>
+<%@ Property Name="NameSpace" Type="System.String" Category="Context" Description="NameSpace" %>
+<%@ Property Name="Entities" Type="System.String" Category="Context" Description="Entities" %>
+<%@ Property Name="BaseDbName" Type="System.String" Category="Context" Description="BaseDbName" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<% this.OutputFile = SaveFilePath+"\\" + UCase(SourceTable.Name) + "Provider.cs"; %>
+<script runat="template">
+public string LCase(string text)
+{
+    return text.Substring(0,1).ToLower() + text.Substring(1);
+}
+public string UCase(string text)
+{
+    return text.Substring(0,1).ToUpper() + text.Substring(1);
+}
+public string SText(string text)
+{
+    if(text.IndexOf("_")>0)
+        return text;
+    string reText=string.Empty;
+    string lastChar=text.Substring(text.Length-1);
+    if(lastChar=="s" || lastChar=="x" || lastChar=="o")
+    {
+        reText=text+"es";
+    }
+    else if(lastChar=="y")
+    {
+        reText=text.Remove(text.Length - 1,1)+"ies";
+    }
+    else
+    {
+        reText=text+"s";
+    }
+    return reText;
+}
+public string GetCSharpVariableType(ColumnSchema column)
+        {
+            switch(column.DataType)
+            {
+                case DbType.AnsiString: return "string";
+                case DbType.AnsiStringFixedLength: return "string";
+                case DbType.Binary: return "byte[]";
+                case DbType.Boolean: return "bool";
+                case DbType.Byte: return "int";
+                case DbType.Currency: return "decimal";
+                case DbType.Date: return "DataTime";
+                case DbType.DateTime: return "DateTime";
+                case DbType.Decimal: return "decimal";
+                case DbType.Double: return "double";
+                case DbType.Guid: return "Guid";
+                case DbType.Int16: return "short";
+                case DbType.Int32: return "int";
+                case DbType.Int64: return "long";
+                case DbType.Object: return "object";
+                case DbType.SByte: return "sbyte";
+                case DbType.Single: return "float";
+                case DbType.String: return "string";
+                case DbType.StringFixedLength: return "string";
+                case DbType.Time: return "TimeSpan";
+                case DbType.UInt16: return "ushort";
+                case DbType.UInt32: return "uint";
+                case DbType.UInt64: return "ulong";
+                case DbType.VarNumeric: return "decimal";
+            }
+
+            return "string";
+        }
+</script>
+<%string nameSpace=NameSpace;%>
+<%string entities=Entities;%>
+<%string className=UCase(SourceTable.Name)+"Provider";%>
+<%int idPrime=0;%>
+<%string tableName=SourceTable.Name;%>
+<%string tableNameUpper=UCase(SourceTable.Name);%>
+<%string tableNames=SourceTable.Name;%>
+<%string tablePk=SourceTable.Columns[idPrime].Name;%>
+<%string tablePkLower=LCase(SourceTable.Columns[idPrime].Name);%>
+<%string tablePkUpper=UCase(SourceTable.Columns[idPrime].Name);%>
+<%string tablePkType=GetCSharpVariableType(SourceTable.Columns[idPrime]);%>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Data.SqlClient;
+using System.Transactions;
+using <%=nameSpace%>.Model;
+using <%=nameSpace%>.DAL;
+
+/*
+Name : <%=tableNameUpper%> DAL
+CreatAuthor : XiongXueHao
+CreatTime : <%=DateTime.Now.ToString()%>
+Description : just creat some base methods with codesmith, please add or edit your method.
+*/
+namespace <%=nameSpace%>.DAL.Provider
+{
+    /// <summary>
+    /// <%=tableNameUpper%>
+    /// </summary>
+    public class <%=className%>
+    {
+        #region Instance
+        
+        public <%=className%>() { }
+        private static readonly <%=className%> instance = new <%=className%>();
+        internal static <%=className%> Instance
+        {
+            get { return instance; }
+        }
+    
+        #endregion
+        
+        #region Base Methods
+
+        /// <summary>
+        /// Insert
+        /// </summary>
+        /// <param name="_<%=tableName%>"></param>
+        /// <returns></returns>
+        public int Insert(<%=tableName%> _<%=tableName%>)
+        {
+            using (var db = new <%=entities%>())
+            {
+                db.<%=tableNames%>.Add(_<%=tableName%>);
+                return db.SaveChanges();
+            }
+        }
+
+        /// <summary>
+        /// Update
+        /// </summary>
+        /// <param name="_<%=tableName%>"></param>
+        /// <param name="db"></param>
+        /// <returns></returns>
+        public int Update(<%=tableName%> _<%=tableName%>, Model.<%=entities%> db = null)
+        {
+			bool newDB = false;
+			if (db == null)
+			{
+				db = new <%=entities%>();
+				newDB = true;
+			}
+			
+            <%=tableName%> mOriginal = db.<%=tableNames%>.Where(a => a.<%=tablePk%> == _<%=tableName%>.<%=tablePk%>).FirstOrDefault();
+            db.Entry(mOriginal).CurrentValues.SetValues(_<%=tableName%>);
+            
+			int rtn = db.SaveChanges();
+			if (newDB)
+				db.Dispose();
+			return rtn;
+        }
+        
+        /// <summary>
+        /// Update <%=tableName%> ColumnName Value
+        /// </summary>
+        /// <param name="<%=tablePkLower%>"></param>
+        /// <param name="columnName"></param>
+        /// <param name="columnValue"></param>
+        /// <returns></returns>
+        public int UpdateColumnValue(string <%=tablePkLower%>, string columnName, string columnValue)
+        {
+            using (<%=entities%> db = new <%=entities%>())
+            {
+                string sql = "update <%=tableName%> set " + columnName + " = '{0}' where <%=tablePk%> in ({1})";
+                return db.Database.ExecuteSqlCommand(string.Format(sql, columnValue, <%=tablePkLower%>));
+            }
+        }
+        
+        /// <summary>
+        /// Physically Delete
+        /// </summary>
+        /// <param name="<%=tablePkLower%>"></param>
+        /// <returns></returns>
+        public int Delete(<%=tablePkType%> <%=tablePkLower%>)
+        {
+            var db = new <%=entities%>();
+            <%=tableName%> _<%=tableName%> = db.<%=tableNames%>.SingleOrDefault(x => x.<%=tablePk%>.Equals(<%=tablePkLower%>));
+			int rtn = Delete(_<%=tableName%>, db);
+			db.Dispose();
+			return rtn;
+        }
+        
+        /// <summary>
+        /// Physically Delete
+        /// </summary>
+        /// <param name="_<%=tableName%>"></param>
+        /// <param name="db"></param>
+        /// <returns></returns>
+        public int Delete(<%=tableName%> _<%=tableName%>, Model.<%=entities%> db)
+        {   
+            db.<%=tableNames%>.Remove(_<%=tableName%>);
+            return db.SaveChanges();
+        }
+        
+        /// <summary>
+        /// Batch Physically Delete
+        /// </summary>
+        /// <param name="<%=tablePkLower%>s"></param>
+        /// <returns></returns>
+        public int Delete(List<<%=tablePkType%>> <%=tablePkLower%>s)
+        {
+            int result = 0;
+            using (var db = new <%=entities%>())
+            {
+                using (TransactionScope ts = new TransactionScope())
+                {
+                    foreach (var <%=tablePkLower%> in <%=tablePkLower%>s)
+                    {
+                        <%=tableName%> _<%=tableName%> = db.<%=tableNames%>.SingleOrDefault(x => x.<%=tablePk%>.Equals(<%=tablePkLower%>));
+                        if (_<%=tableName%> != null)
+                        {
+                            db.<%=tableNames%>.Remove(_<%=tableName%>);
+                            result += db.SaveChanges();
+                        }
+                    }
+
+                    ts.Complete();
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Get model by <%=tablePk%>
+        /// </summary>
+        /// <param name="<%=tablePkLower%>"></param>
+        /// <param name="db"></param>
+        /// <returns></returns>
+        public <%=tableName%> GetModelBy<%=tablePkUpper%>(<%=tablePkType%> <%=tablePkLower%>, Model.<%=entities%> db = null)
+        {
+			bool newDB = false;
+			if (db == null)
+			{
+				db = new <%=entities%>();
+				newDB = true;
+			}
+			var model = db.<%=tableNames%>.SingleOrDefault(x => x.<%=tablePk%>.Equals(<%=tablePkLower%>));
+			if (newDB)
+				db.Dispose();
+			return model;
+        }
+        
+        #endregion
+        
+        #region Extension Methods
+        
+        /// <summary>
+        /// Get List By PageParameter
+        /// </summary>
+        /// <param name="parameter"></param>
+        /// <returns></returns>
+        public IEnumerable<<%=tableName%>> GetList(<%=tableNameUpper%>Parameter parameter)
+        {
+            var db = new <%=entities%>();
+            var list = db.<%=tableNames%>.AsQueryable();
+            
+            if (string.IsNullOrEmpty(parameter.OrderBy))
+            {
+                parameter.OrderBy = "<%=tablePk%>";
+                parameter.IsAsc = false;
+            }
+            
+            //parameter
+            //由于逻辑不同，此处生成的只为方便大家修改
+            #region 查询参数
+            /*
+            <% for(int i=1;i<SourceTable.Columns.Count;i++)
+            {
+                string columnName=SourceTable.Columns[i].Name;
+                string ifStr=string.Empty;
+                string guanxiStr=string.Empty;
+                string type=GetCSharpVariableType(SourceTable.Columns[i]);
+                switch(type)
+                {
+                    case "string":
+                        ifStr="!string.IsNullOrEmpty(parameter."+columnName+")";
+                        guanxiStr="x."+columnName+".Contains(parameter."+columnName+")";
+                        break;
+                    case "Guid":
+                    case "int":
+                    case "long":
+                    case "bool":
+                    default:
+                        ifStr="parameter."+columnName+"!=null";
+                        guanxiStr="x."+columnName+"==parameter."+columnName;
+                        break;
+                    
+                }
+            %>
+            if (<%=ifStr%>)
+            {
+                list = list.Where(x => <%=guanxiStr%>);
+            }
+            <% } %>
+            */
+            #endregion 查询参数
+            
+            return list.AsQueryable().GetPageList(parameter);
+        }
+        
+        #endregion
+    }
+}
+

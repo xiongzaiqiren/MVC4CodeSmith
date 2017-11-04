@@ -1,0 +1,142 @@
+﻿<%-- 
+Name	: List.cst
+Author	: XiongXueHao
+Description: Mvc View List
+--%>
+<%@ CodeTemplate Language="C#" TargetLanguage="C#" ResponseEncoding="UTF-8" Inherits="CodeSmith.BaseTemplates.OutputFileCodeTemplate"  Debug="False" Description="Creates a simplistic entity object." %>
+<%@ Assembly Name="CodeSmith.BaseTemplates" %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table that the stored procedures should be based on." %>
+<%@ Property Name="SaveFilePath" Type="System.String" Category="Context" Description="SaveFilePath" %>
+<%@ Property Name="NameSpace" Type="System.String" Category="Context" Description="NameSpace" %>
+<%@ Property Name="Entities" Type="System.String" Category="Context" Description="Entities" %>
+<%@ Property Name="BaseDbName" Type="System.String" Category="Context" Description="BaseDbName" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<% this.OutputFile =SaveFilePath + "\\" + UCase(SourceTable.Name) + "List.cshtml"; %>
+<script runat="template">
+public string UCase(string text)
+{
+    return text.Substring(0,1).ToUpper() + text.Substring(1);
+}
+public string GetCSharpVariableType(ColumnSchema column)
+        {
+            switch(column.DataType)
+            {
+                case DbType.AnsiString: return "string";
+                case DbType.AnsiStringFixedLength: return "string";
+                case DbType.Binary: return "byte[]";
+                case DbType.Boolean: return "bool";
+                case DbType.Byte: return "int";
+                case DbType.Currency: return "decimal";
+                case DbType.Date: return "DataTime";
+                case DbType.DateTime: return "DateTime";
+                case DbType.Decimal: return "decimal";
+                case DbType.Double: return "double";
+                case DbType.Guid: return "Guid";
+                case DbType.Int16: return "short";
+                case DbType.Int32: return "int";
+                case DbType.Int64: return "long";
+                case DbType.Object: return "object";
+                case DbType.SByte: return "sbyte";
+                case DbType.Single: return "float";
+                case DbType.String: return "string";
+                case DbType.StringFixedLength: return "string";
+                case DbType.Time: return "TimeSpan";
+                case DbType.UInt16: return "ushort";
+                case DbType.UInt32: return "uint";
+                case DbType.UInt64: return "ulong";
+                case DbType.VarNumeric: return "decimal";
+            }
+
+            return "string";
+        }
+</script>
+<%string nameSpace=NameSpace;%>
+<%string tableName=SourceTable.Name;%>
+<%string tableNameUpper=UCase(SourceTable.Name);%>
+@using <%=nameSpace%>.Common;
+@using <%=nameSpace%>.Model;
+@using <%=nameSpace%>.Model.Enum;
+@using <%=nameSpace%>.BLL;
+@{
+    ViewBag.Title = "<%=tableName%>列表";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@section head {
+    <script type="text/javascript">
+        function gridDataUrl() { return "@Url.Content("~/<%=tableNameUpper%>/<%=tableNameUpper%>GetList")" }; //数据url
+        var updateStatusUrl = "@Url.Content("~/<%=tableNameUpper%>/<%=tableNameUpper%>UpdateStatus")/"; //状态更新url
+        var gridDivId = "middle"; //表格div容器id
+        var gridTableId = "listTable"; //表格table容器id
+
+        //绑定数据
+        function gridBind() {
+            jqGridExtend.bindData({
+                gridDivId : gridDivId,
+                gridTableId : gridTableId,
+                url : gridDataUrl(),
+                multikey : "id",
+                rownumbers : true,
+                colNames : [
+                            "id", 
+                            <% for(int i=1;i<SourceTable.Columns.Count;i++){%>
+                            "<%=SourceTable.Columns[i].Name%>",
+                            <%}%>
+                            "操作"
+                          ],
+                colModel : [
+   		                    { name: 'id', index: '<%=SourceTable.Columns[0].Name%>', sorttype: "<%=GetCSharpVariableType(SourceTable.Columns[0])%>", align: "center", width: '40px' },
+                            <% for(int i=1;i<SourceTable.Columns.Count;i++){%>
+                            { name: '<%=SourceTable.Columns[i].Name%>', index: '<%=SourceTable.Columns[i].Name%>', align: "center" },
+                            <%}%>
+                            { name: 'Action', index: 'Action', align: "left", sortable: false, width: '60px' }
+   	                    ],
+                gridComplete : function () {
+                        gridTabel = $("#" + gridTableId);
+                        jqGridExtend.pageSizer.setSize('pager');
+                        var rowNums = gridTabel.jqGrid('getDataIDs');
+                        for (var i = 0; i < rowNums.length; i++) {
+                            var rowIndex = rowNums[i];
+                            var model = gridTabel.jqGrid('getRowData', rowIndex);
+                            var links = new Array();
+                            links[0] = "<a href=\"javascript:boxExtend.box('@Url.Content("~/<%=tableNameUpper%>/<%=tableNameUpper%>Form")/" + model.id + "','编辑<%=tableNameUpper%>')\" title=\"编辑<%=tableNameUpper%>\"><img src=\"@Url.Content("~/Content/Images/Icon/edit.gif")\" /></a>";
+                            links[1] = "<a href=\"javascript:UpdateStatus('" + model.id + "','del','1')\" title=\"删除\"><img src=\"@Url.Content("~/Content/Images/Icon/delete.gif")\" /></a>";
+                            links[2] = "<a href=\"javascript:boxExtend.box('@Url.Content("~/<%=tableNameUpper%>/<%=tableNameUpper%>Details")/" + model.id + "','查看<%=tableNameUpper%>')\" title=\"查看<%=tableNameUpper%>\"><img src=\"@Url.Content("~/Content/Images/Icon/page.gif")\" /></a>";
+                            gridTabel.jqGrid('setRowData', rowIndex, { Action: links.join("    ") });
+                        }
+                }
+            });
+        }
+
+       @RenderPage("~/Views/Shared/PartialListJs.cshtml")
+
+        jQuery(document).ready(function () {
+            //绑定数据
+            gridBind();
+            //模式窗口
+            boxExtend.init();
+        });
+    </script>
+}
+<div id="tab">
+    <ul>
+        <li class="Current"><a href="#" onfocus="this.blur()"><span>@ViewBag.Title</span></a> </li>
+    </ul>
+</div>
+<div id="menu">
+    <ul>
+        <li>
+			<a href="@Url.Content("~/<%=tableNameUpper%>/<%=tableNameUpper%>Form")" onfocus="this.blur()" title="添加<%=tableNameUpper%>" class="inbox">
+            <span><img align="left" src="@Url.Content("~/Content/Images/Icon/add.gif")" />添加<%=tableNameUpper%></span>
+			</a>
+        </li>
+    </ul>
+</div>
+<div id="middle">
+    <table id="listTable" border="0" cellspacing="0" cellpadding="0">
+    </table>
+    <div id="pager">
+    </div>
+</div>
+
+

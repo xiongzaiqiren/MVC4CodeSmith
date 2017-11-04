@@ -1,0 +1,344 @@
+﻿<%--
+Name	: all.cst
+Author	: XiongXueHao
+Description: generate all template
+--%>
+<%@ CodeTemplate Language="C#" TargetLanguage="Text" ResponseEncoding="UTF-8" Src="" Inherits="" Debug="False" Description="Template description here." %>
+<%@ Property Name="SourceDatabase" Type="SchemaExplorer.DatabaseSchema" Category="Context"  Description="Database" %>
+<%@ Assembly Name="SchemaExplorer" %> 
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import Namespace="System.IO" %>
+<%
+
+//DAL
+OutputDALExtendEntity();
+OutPutDALResposite();
+OutputDALTemplate();
+//Model
+OutPutAPIModel();
+OutPutModelEnum();
+OutPutModelParams();
+OutputModelTemplate();
+//BLL
+OutPutBLLRepository();
+OutputBLLTemplate();
+//Controller
+OutputSharedControllerTemplate();
+OutputBaseControllerTemplate();
+OutputControllerTemplate(); 
+//View
+OutputViewDetailTemplate();
+OutputViewFormTemplate();
+OutputViewListTemplate();
+%> 
+<script runat="template">
+//define
+string derectory="E:\\src";
+string nameSpace="KaiFan";
+string entities="KaiFanDBEntities";
+string dbname="KaiFanDB";
+
+private string UCase(string text)
+{
+    return text.Substring(0,1).ToUpper() + text.Substring(1);
+}
+//create template
+private CodeTemplate GetModelTemplate(string modelTemplateSrc) 
+{ 
+    CodeTemplate _modelTemplate=null;
+    CodeTemplateCompiler compiler = new CodeTemplateCompiler(modelTemplateSrc); 
+    compiler.Compile();  
+    if (compiler.Errors.Count == 0)  
+    {  
+      _modelTemplate = compiler.CreateInstance();  
+      _modelTemplate.SetProperty("NameSpace", nameSpace);
+      _modelTemplate.SetProperty("Entities", entities);
+      _modelTemplate.SetProperty("BaseDbName", dbname);
+    } 
+    else  
+    {  
+        for (int i = 0; i < compiler.Errors.Count; i++)  
+        { 
+           Response.WriteLine(compiler.Errors[ i].ToString()); 
+        }  
+    }  
+    return _modelTemplate;
+}  
+
+//dal
+public void OutputDALExtendEntity()  
+{  
+    CodeTemplate modelTemplate=GetModelTemplate(this.CodeTemplateInfo.DirectoryName + "\\DAL\\ExtendEntity.cst");
+    if(modelTemplate==null)
+    {
+        return;
+    }
+    string tempderectory=derectory+"\\DAL";
+    if (!Directory.Exists(tempderectory))
+    {
+        Directory.CreateDirectory(tempderectory);
+    }
+    modelTemplate.SetProperty("SaveFilePath", tempderectory);
+	modelTemplate.SetProperty("NameSpace", nameSpace);
+    modelTemplate.Render(Response);
+}
+public void OutputDALTemplate()  
+{  
+    CodeTemplate modelTemplate=GetModelTemplate(this.CodeTemplateInfo.DirectoryName + "\\DAL\\Provider.cst");
+    if(modelTemplate==null)
+    {
+        return;
+    }
+    string tempderectory=derectory+"\\DAL\\Provider";
+    if (!Directory.Exists(tempderectory))
+    {
+        Directory.CreateDirectory(tempderectory);
+    }
+     modelTemplate.SetProperty("SaveFilePath", tempderectory);
+    foreach (TableSchema table in SourceDatabase.Tables)  
+    { 
+         modelTemplate.SetProperty("SourceTable", table);
+         modelTemplate.Render(Response);
+    }
+  
+}
+public void OutPutDALResposite()
+{
+    CodeTemplate modelTemplate=GetModelTemplate(this.CodeTemplateInfo.DirectoryName + "\\DAL\\DataRepository.cst");
+    if(modelTemplate==null)
+    {
+        return;
+    }
+    string tempderectory=derectory+"\\DAL";
+    if (!Directory.Exists(tempderectory))
+    {
+        Directory.CreateDirectory(tempderectory);
+    }
+    modelTemplate.SetProperty("SourceDatabase",SourceDatabase);
+    modelTemplate.SetProperty("SaveFilePath", tempderectory);
+    modelTemplate.Render(Response);
+}
+//model
+public void OutPutAPIModel()
+{
+    CodeTemplate modelTemplate=GetModelTemplate(this.CodeTemplateInfo.DirectoryName + "\\Model\\APIModel.cst");
+    if(modelTemplate==null)
+    {
+        return;
+    }
+    string tempderectory=derectory+"\\Model";
+    if (!Directory.Exists(tempderectory))
+    {
+        Directory.CreateDirectory(tempderectory);
+    }
+    modelTemplate.SetProperty("SaveFilePath", tempderectory);
+	modelTemplate.SetProperty("NameSpace", nameSpace);
+    modelTemplate.Render(Response);
+}
+public void OutPutModelEnum()
+{
+    CodeTemplate modelTemplate=GetModelTemplate(this.CodeTemplateInfo.DirectoryName + "\\Model\\ModelEnum.cst");
+    if(modelTemplate==null)
+    {
+        return;
+    }
+    string tempderectory=derectory+"\\Model\\Enum";
+    if (!Directory.Exists(tempderectory))
+    {
+        Directory.CreateDirectory(tempderectory);
+    }
+    modelTemplate.SetProperty("SaveFilePath", tempderectory);
+	modelTemplate.SetProperty("NameSpace", nameSpace);
+    modelTemplate.Render(Response);
+}
+public void OutPutModelParams()
+{
+    CodeTemplate modelTemplate=GetModelTemplate(this.CodeTemplateInfo.DirectoryName + "\\Model\\PageParameter.cst");
+    if(modelTemplate==null)
+    {
+        return;
+    }
+    string tempderectory=derectory+"\\Model";
+    if (!Directory.Exists(tempderectory))
+    {
+        Directory.CreateDirectory(tempderectory);
+    }
+    modelTemplate.SetProperty("SourceDatabase",SourceDatabase);
+    modelTemplate.SetProperty("SaveFilePath", tempderectory);
+    modelTemplate.Render(Response);
+}
+public void OutputModelTemplate()  
+{  
+    CodeTemplate modelTemplate=GetModelTemplate(this.CodeTemplateInfo.DirectoryName + "\\Model\\ModelValidation.cst");
+    if(modelTemplate==null)
+    {
+        return;
+    }
+    string tempderectory=derectory+"\\Model\\Validation";
+    if (!Directory.Exists(tempderectory))
+    {
+        Directory.CreateDirectory(tempderectory);
+    }
+     modelTemplate.SetProperty("SaveFilePath", tempderectory);
+    foreach (TableSchema table in SourceDatabase.Tables)  
+    { 
+         modelTemplate.SetProperty("SourceTable", table);
+         modelTemplate.Render(Response);
+    }
+  
+}
+//bll
+public void OutPutBLLRepository()
+{
+    CodeTemplate modelTemplate=GetModelTemplate(this.CodeTemplateInfo.DirectoryName + "\\BLL\\BLLRepository.cst");
+    if(modelTemplate==null)
+    {
+        return;
+    }
+    string tempderectory=derectory+"\\BLL";
+    if (!Directory.Exists(tempderectory))
+    {
+        Directory.CreateDirectory(tempderectory);
+    }
+    modelTemplate.SetProperty("SourceDatabase",SourceDatabase);
+    modelTemplate.SetProperty("SaveFilePath", tempderectory);
+    modelTemplate.Render(Response);
+}
+public void OutputBLLTemplate()  
+{  
+    CodeTemplate modelTemplate=GetModelTemplate(this.CodeTemplateInfo.DirectoryName + "\\BLL\\Provider.cst");
+    if(modelTemplate==null)
+    {
+        return;
+    }
+    string tempderectory=derectory+"\\BLL\\Provider";
+    if (!Directory.Exists(tempderectory))
+    {
+        Directory.CreateDirectory(tempderectory);
+    }
+     modelTemplate.SetProperty("SaveFilePath", tempderectory);
+    foreach (TableSchema table in SourceDatabase.Tables)  
+    { 
+         modelTemplate.SetProperty("SourceTable", table);
+         modelTemplate.Render(Response);
+    }
+}
+//Controller
+public void OutputSharedControllerTemplate()  
+{  
+    CodeTemplate modelTemplate=GetModelTemplate(this.CodeTemplateInfo.DirectoryName + "\\Controllers\\SharedController.cst");
+    if(modelTemplate==null)
+    {
+        return;
+    }
+    string tempderectory=derectory+"\\Controllers";
+    if (!Directory.Exists(tempderectory))
+    {
+        Directory.CreateDirectory(tempderectory);
+    }
+    modelTemplate.SetProperty("SaveFilePath", tempderectory);
+	modelTemplate.SetProperty("NameSpace", nameSpace);
+    modelTemplate.Render(Response);
+	
+}
+public void OutputBaseControllerTemplate()  
+{  
+    CodeTemplate modelTemplate=GetModelTemplate(this.CodeTemplateInfo.DirectoryName + "\\Controllers\\BaseController.cst");
+    if(modelTemplate==null)
+    {
+        return;
+    }
+    string tempderectory=derectory+"\\Controllers";
+    if (!Directory.Exists(tempderectory))
+    {
+        Directory.CreateDirectory(tempderectory);
+    }
+    modelTemplate.SetProperty("SaveFilePath", tempderectory);
+	modelTemplate.SetProperty("NameSpace", nameSpace);
+    modelTemplate.Render(Response);
+	
+}
+public void OutputControllerTemplate()  
+{  
+    CodeTemplate modelTemplate=GetModelTemplate(this.CodeTemplateInfo.DirectoryName + "\\Controllers\\Controller.cst");
+    if(modelTemplate==null)
+    {
+        return;
+    }
+    string tempderectory=derectory+"\\Controllers";
+    if (!Directory.Exists(tempderectory))
+    {
+        Directory.CreateDirectory(tempderectory);
+    }
+     modelTemplate.SetProperty("SaveFilePath", tempderectory);
+    foreach (TableSchema table in SourceDatabase.Tables)  
+    { 
+         modelTemplate.SetProperty("SourceTable", table);
+         modelTemplate.Render(Response);
+    }
+}
+//View
+public void OutputViewDetailTemplate()  
+{  
+    CodeTemplate modelTemplate=GetModelTemplate(this.CodeTemplateInfo.DirectoryName + "\\Views\\Details.cst");
+    if(modelTemplate==null)
+    {
+        return;
+    }
+     
+    foreach (TableSchema table in SourceDatabase.Tables)  
+    {
+		string tempderectory=derectory +"\\Views\\"+UCase(table.Name); //根据控制器名称来设置视图文件夹
+	    if (!Directory.Exists(tempderectory))
+	    {
+	        Directory.CreateDirectory(tempderectory);
+	    }
+		
+		modelTemplate.SetProperty("SaveFilePath", tempderectory);
+        modelTemplate.SetProperty("SourceTable", table);
+        modelTemplate.Render(Response);
+    }
+}
+public void OutputViewFormTemplate()  
+{  
+    CodeTemplate modelTemplate=GetModelTemplate(this.CodeTemplateInfo.DirectoryName + "\\Views\\Form.cst");
+    if(modelTemplate==null)
+    {
+        return;
+    }
+	
+    foreach (TableSchema table in SourceDatabase.Tables)  
+    {
+		string tempderectory=derectory +"\\Views\\"+UCase(table.Name); //根据控制器名称来设置视图文件夹
+	    if (!Directory.Exists(tempderectory))
+	    {
+	        Directory.CreateDirectory(tempderectory);
+	    }
+		
+		modelTemplate.SetProperty("SaveFilePath", tempderectory);
+        modelTemplate.SetProperty("SourceTable", table);
+        modelTemplate.Render(Response);
+    }
+}
+public void OutputViewListTemplate()  
+{  
+    CodeTemplate modelTemplate=GetModelTemplate(this.CodeTemplateInfo.DirectoryName + "\\Views\\List.cst");
+    if(modelTemplate==null)
+    {
+        return;
+    }
+	
+    foreach (TableSchema table in SourceDatabase.Tables)  
+    {
+		string tempderectory=derectory +"\\Views\\"+UCase(table.Name); //根据控制器名称来设置视图文件夹
+	    if (!Directory.Exists(tempderectory))
+	    {
+	        Directory.CreateDirectory(tempderectory);
+	    }
+		
+		modelTemplate.SetProperty("SaveFilePath", tempderectory);
+        modelTemplate.SetProperty("SourceTable", table);
+        modelTemplate.Render(Response);
+    }
+}
+</script>
