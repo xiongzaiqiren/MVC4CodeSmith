@@ -52,6 +52,7 @@ public string GetCSharpVariableType(ColumnSchema column)
                 case DbType.Currency: return "decimal";
                 case DbType.Date: return "DataTime";
                 case DbType.DateTime: return "DateTime";
+                case DbType.DateTimeOffset: return "DateTimeOffset";
                 case DbType.Decimal: return "decimal";
                 case DbType.Double: return "double";
                 case DbType.Guid: return "Guid";
@@ -68,6 +69,7 @@ public string GetCSharpVariableType(ColumnSchema column)
                 case DbType.UInt32: return "uint";
                 case DbType.UInt64: return "ulong";
                 case DbType.VarNumeric: return "decimal";
+                case DbType.Xml: return "Object";
             }
 
             return "string";
