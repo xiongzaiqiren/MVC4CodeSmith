@@ -24,78 +24,152 @@ Description : just creat some base methods with codesmith, please add or edit yo
 */
 namespace <%=nameSpace%>.Model
 {
+    #region 旧版API 2017-11-25  XiongXueHao
     /// <summary>
     /// API基础模型
     /// </summary>
-    [Serializable]
-    [DataContract]
-    public class APIBaseModel
-    {
-        /// <summary>
-        /// 状态码
-        /// </summary>
-        [DataMember(EmitDefaultValue = true, IsRequired = true)]
-        public int status { get; set; }
-        /// <summary>
-        /// 状态信息
-        /// </summary>
-        [DataMember(EmitDefaultValue = true, IsRequired = true)]
-        public string message { get; set; }
+    //[Serializable]
+    //[DataContract]
+    //public class APIBaseModel
+    //{
+    //    /// <summary>
+    //    /// 状态码
+    //    /// </summary>
+    //    [DataMember(EmitDefaultValue = true, IsRequired = true)]
+    //    public int status { get; set; }
+    //    /// <summary>
+    //    /// 状态信息
+    //    /// </summary>
+    //    [DataMember(EmitDefaultValue = true, IsRequired = true)]
+    //    public string message { get; set; }
 
-        //[DataMember]
-        //public dynamic Data { get; set; }
-    }
+    //    //[DataMember]
+    //    //public dynamic Data { get; set; }
+    //}
 
     /// <summary>
     /// 用于分页列表的API基础模型
     /// </summary>
-    [Serializable]
-    [DataContract]
-    public class APIListBaseModel : APIBaseModel
-    {
-        /// <summary>
-        /// 当前页大小
-        /// </summary>
-        [DataMember(EmitDefaultValue = true, IsRequired = true)]
-        public int PageSize { get; set; }
-        /// <summary>
-        /// 当前页码
-        /// </summary>
-        [DataMember(EmitDefaultValue = true, IsRequired = true)]
-        public int PageIndex { get; set; }
-        /// <summary>
-        /// 记录总数
-        /// </summary>
-        [DataMember(EmitDefaultValue = true, IsRequired = true)]
-        public int RecordCount { get; set; }
-        /// <summary>
-        /// 页总数
-        /// </summary>
-        [DataMember(EmitDefaultValue = true, IsRequired = false)]
-        public int PageCount { get; set; }
+    //[Serializable]
+    //[DataContract]
+    //public class APIListBaseModel : APIBaseModel
+    //{
+    //    /// <summary>
+    //    /// 当前页大小
+    //    /// </summary>
+    //    [DataMember(EmitDefaultValue = true, IsRequired = true)]
+    //    public int PageSize { get; set; }
+    //    /// <summary>
+    //    /// 当前页码
+    //    /// </summary>
+    //    [DataMember(EmitDefaultValue = true, IsRequired = true)]
+    //    public int PageIndex { get; set; }
+    //    /// <summary>
+    //    /// 记录总数
+    //    /// </summary>
+    //    [DataMember(EmitDefaultValue = true, IsRequired = true)]
+    //    public int RecordCount { get; set; }
+    //    /// <summary>
+    //    /// 页总数
+    //    /// </summary>
+    //    [DataMember(EmitDefaultValue = true, IsRequired = false)]
+    //    public int PageCount { get; set; }
 
-        //[DataMember]
-        //public dynamic List { get; set; }
-    }
+    //    //[DataMember]
+    //    //public dynamic List { get; set; }
+    //}
 
     /// <summary>
     /// API模型
     /// </summary>
+    //[Serializable]
+    //[DataContract]
+    //public class APIModel : APIBaseModel
+    //{
+    //    /// <summary>
+    //    /// 数据
+    //    /// </summary>
+    //    [DataMember(EmitDefaultValue = true, IsRequired = true)]
+    //    public dynamic Data { get; set; }
+
+    //    /// <summary>
+    //    /// 自定义内容
+    //    /// </summary>
+    //    [DataMember(EmitDefaultValue = true, IsRequired = false)]
+    //    public dynamic Custom { get; set; }
+    //} 
+    #endregion
+
+    #region ApiModel
+    public interface IApiBase
+    {
+        [DataMember(IsRequired = true)]
+        int Status { get; set; }
+        [DataMember(IsRequired = true)]
+        string Message { get; set; }
+    }
+    public interface IPage
+    {
+        [DataMember(IsRequired = true)]
+        int PageSize { get; set; }
+        [DataMember(IsRequired = true)]
+        int PageIndex { get; set; }
+        [DataMember(IsRequired = true)]
+        int RecordCount { get; set; }
+        [DataMember(IsRequired = false)]
+        int PageCount { get; set; }
+    }
+
     [Serializable]
     [DataContract]
-    public class APIModel : APIBaseModel
+    public class ApiModel : IApiBase
     {
-        /// <summary>
-        /// 数据
-        /// </summary>
-        [DataMember(EmitDefaultValue = true, IsRequired = true)]
-        public dynamic Data { get; set; }
+        public int Status { get; set; }
+        public string Message { get; set; }
 
-        /// <summary>
-        /// 自定义内容
-        /// </summary>
-        [DataMember(EmitDefaultValue = true, IsRequired = false)]
-        public dynamic Custom { get; set; }
+        public ApiModel() { }
+        public ApiModel(string Message) { this.Status = 200; this.Message = Message; }
+        public ApiModel(int Status, string Message) { this.Status = Status; this.Message = Message; }
     }
+    [Serializable]
+    [DataContract]
+    public class ApiModel<T> : ApiModel
+    {
+        [DataMember(IsRequired = true)]
+        public T Data { get; set; }
+
+        public ApiModel() : base() { }
+        public ApiModel(T Data) : base("ok") { this.Data = Data; }
+    }
+    [Serializable]
+    [DataContract]
+    public class ApiListModel<T> : ApiModel
+    {
+        [DataMember(IsRequired = true)]
+        public IList<T> List { get; set; }
+
+        public ApiListModel() : base() { }
+        public ApiListModel(IList<T> List) : base("ok") { this.List = List; }
+    }
+    [Serializable]
+    [DataContract]
+    public class ApiPageListModel<T> : ApiListModel<T>, IPage
+    {
+        public int PageSize { get; set; }
+        public int PageIndex { get; set; }
+        public int RecordCount { get; set; }
+        public int PageCount
+        {
+            //get { return PageSize != 0 ? (RecordCount % PageSize == 0 ? RecordCount / PageSize : RecordCount / PageSize + 1) : 0; }
+            get { return PageSize != 0 ? ((RecordCount + PageSize - 1) / PageSize) : 0; }
+            set { }
+        }
+
+        public ApiPageListModel() : base() { }
+        public ApiPageListModel(IList<T> List) : base(List) { }
+        public ApiPageListModel(IList<T> List, int PageSize, int PageIndex, int RecordCount) : base(List) { this.PageSize = PageSize; this.PageIndex = PageIndex; this.RecordCount = RecordCount; }
+    }
+    #endregion
+
 }
 
